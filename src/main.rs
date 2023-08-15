@@ -1,3 +1,6 @@
+mod particle_mesh;
+mod config;
+
 fn main() {
-    println!("Hello, world!");
+    print!("{}", particle_mesh::test())
 }
