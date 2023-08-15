@@ -6,19 +6,17 @@ use crate::config::N_CELLS;
 
 fn sample_freq(n: &usize) -> Vec<f64> {
     let len = match n % 2 {
-        0 => n / 2 - 1,
-        _ => (n - 1) / 2,
+        0 => n / 2,
+        _ => (n - 1) / 2 + 1,
     };
     let mut res: Vec<f64> = (0..=len)
-        .chain(0..(len + (n % 2 == 0) as usize))
+        .chain(0..(len - n % 2))
         .map(|x| (x as f64) / (*n as f64))
         .collect::<Vec<f64>>();
 
-    res[(len as usize + 1)..].reverse();
+    res[len..].reverse();
 
-    res[(len as usize + 1)..]
-        .iter_mut()
-        .for_each(|x| *x = -1. * (*x + 1.));
+    res[len..].iter_mut().for_each(|x| *x = -1. * (*x + 1.));
 
     res
 }
@@ -85,7 +83,6 @@ mod tests {
             let n: usize = 10;
             let ans = sample_freq(&n);
             let expected_result = vec![0.0, 0.1, 0.2, 0.3, 0.4, -1.4, -1.3, -1.2, -1.1, -1.0];
-            println!("{:?}", ans);
             ans.iter()
                 .zip(expected_result)
                 .for_each(|(a, b)| assert_eq!(*a, b));
@@ -93,7 +90,6 @@ mod tests {
         {
             let n: usize = 11;
             let ans = sample_freq(&n);
-            println!("{:?}", ans);
             let expected_result = vec![
                 0.0,
                 0.09090909090909091,
