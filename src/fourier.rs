@@ -1,8 +1,57 @@
 use std::f64::consts::PI;
 
-use ndarray::{s, Array, Array3};
-
 use crate::config::N_CELLS;
+use ndarray::{s, Array, Array1, Array3};
+use rustfft::{num_complex::Complex, FftPlanner};
+use std::sync::Arc;
+
+pub fn forward(a: &mut Array3<f64>) {
+    let (x_dim, y_dim, z_dim) = a.dim();
+
+    // Should be a cube matrix
+    assert!(x_dim == y_dim && y_dim == z_dim);
+
+    let mut planner: FftPlanner<f64> = FftPlanner::new();
+    let fft = planner.plan_fft_forward(z_dim);
+
+    for x in 0..x_dim {
+        for y in 0..y_dim {
+            let b = a.slice(s![x, y, ..]);
+            let mut buf = b
+                .map(|x| Complex { re: *x, im: 0.0 })
+                .as_slice()
+                .unwrap()
+                .to_vec();
+            fft.process(&mut buf);
+            let buf: Array1<f64> = buf.iter().map(|x| (*x).re).collect();
+            a.slice_mut(s![x, y, ..]).assign(&buf);
+        }
+    }
+}
+
+pub fn inverse(a: &mut Array3<f64>) {
+    let (x_dim, y_dim, z_dim) = a.dim();
+
+    // Should be a cube matrix
+    assert!(x_dim == y_dim && y_dim == z_dim);
+
+    let mut planner: FftPlanner<f64> = FftPlanner::new();
+    let fft = planner.plan_fft_forward(z_dim);
+
+    for x in 0..x_dim {
+        for y in 0..y_dim {
+            let b = a.slice(s![x, y, ..]);
+            let mut buf = b
+                .map(|x| Complex { re: *x, im: 0.0 })
+                .as_slice()
+                .unwrap()
+                .to_vec();
+            fft.process(&mut buf);
+            let buf: Array1<f64> = buf.iter().map(|x| (*x).re).collect();
+            a.slice_mut(s![x, y, ..]).assign(&buf);
+        }
+    }
+}
 
 fn sample_freq(n: &usize) -> Vec<f64> {
     let len = match n % 2 {
@@ -44,38 +93,8 @@ pub fn fourier_grid() -> Array3<f64> {
 #[cfg(test)]
 mod tests {
     use rustfft::{num_complex::Complex, FftPlanner};
-    use std::sync::Arc;
 
-    use crate::fourier::sample_freq;
-
-    #[test]
-    fn test() {
-        let mut planner = FftPlanner::new();
-        let fft = planner.plan_fft_forward(4);
-
-        let mut buffer = vec![
-            Complex {
-                re: 8.0f32,
-                im: 0.0,
-            },
-            Complex {
-                re: 1.0f32,
-                im: 0.0,
-            },
-            Complex {
-                re: 8.0f32,
-                im: 0.0,
-            },
-            Complex {
-                re: 8.0f32,
-                im: 0.0,
-            },
-        ];
-        fft.process(&mut buffer);
-
-        let fft_clone = Arc::clone(&fft);
-        println!("{:?}", buffer.to_vec());
-    }
+    use super::sample_freq;
 
     #[test]
     fn fftfreq() {
