@@ -1,6 +1,6 @@
 use ndarray::Array3;
 
-use crate::config::{N_CELLS, OMEGA_M0};
+use crate::config::OMEGA_M0;
 use crate::fourier::*;
 
 pub fn potential(density: Array3<f64>, fgrid: Array3<f64>, t: f64) -> Array3<f64> {

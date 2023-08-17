@@ -92,6 +92,7 @@ pub fn fourier_grid() -> Array3<f64> {
 }
 #[cfg(test)]
 mod tests {
+    use ndarray::{s, Array1, Array2, AssignElem};
     use rustfft::{num_complex::Complex, FftPlanner};
 
     use super::sample_freq;
@@ -126,5 +127,12 @@ mod tests {
                 .zip(expected_result)
                 .for_each(|(a, b)| assert_eq!(*a, b));
         }
+    }
+
+    #[test]
+    fn test() {
+        let mut x: Array2<f64> = Array2::ones((3, 10));
+
+        println!("{:?}", x.slice(s![.., 1]));
     }
 }
