@@ -12,6 +12,7 @@ pub fn update(
 ) {
     let potentials = potential(density, fgrid, t);
     let f_a = expansion_factor(t);
+    integrate(positions, velocities, potentials, t, f_a, dt)
 }
 
 fn integrate(
