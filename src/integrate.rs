@@ -1,4 +1,4 @@
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayViewMut1, Axis};
+use ndarray::{s, Array1, Array2, Array3, ArrayViewMut1, Axis};
 
 use crate::{config::N_CELLS, cosmology::expansion_factor, potential::potential};
 
@@ -67,8 +67,8 @@ fn cic_weights(positions: &Array2<f64>, centered_cells: &Array2<f64>) -> Array2<
 }
 
 fn interpolate(
-    mut positions: &ArrayViewMut1<f64>,
-    mut velocities: &ArrayViewMut1<f64>,
+    positions: &ArrayViewMut1<f64>,
+    velocities: &ArrayViewMut1<f64>,
     centered_cells: &Array2<f64>,
     potentials: &Array3<f64>,
     cic_weights: &Array2<f64>,

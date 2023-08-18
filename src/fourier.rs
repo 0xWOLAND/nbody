@@ -7,7 +7,7 @@ use crate::{
 use ndarray::{s, Array1, Array3};
 use rustfft::{num_complex::Complex, FftPlanner};
 
-pub fn forward(a: &mut Array3<f64>) {
+pub fn forward(a: &mut Array3<Complex<f64>>) {
     let (x_dim, y_dim, z_dim) = a.dim();
 
     // Should be a cube matrix
@@ -19,37 +19,29 @@ pub fn forward(a: &mut Array3<f64>) {
     for x in 0..x_dim {
         for y in 0..y_dim {
             let b = a.slice(s![x, y, ..]);
-            let mut buf = b
-                .map(|x| Complex { re: *x, im: 0.0 })
-                .as_slice()
-                .unwrap()
-                .to_vec();
+            let mut buf = b.as_slice().unwrap().to_vec();
             fft.process(&mut buf);
-            let buf: Array1<f64> = buf.iter().map(|x| (*x).re).collect();
+            let buf: Array1<Complex<f64>> = buf.into();
             a.slice_mut(s![x, y, ..]).assign(&buf);
         }
     }
 }
 
-pub fn inverse(a: &mut Array3<f64>) {
+pub fn inverse(a: &mut Array3<Complex<f64>>) {
     let (x_dim, y_dim, z_dim) = a.dim();
 
     // Should be a cube matrix
     assert!(x_dim == y_dim && y_dim == z_dim);
 
     let mut planner: FftPlanner<f64> = FftPlanner::new();
-    let fft = planner.plan_fft_forward(z_dim);
+    let fft = planner.plan_fft_inverse(z_dim);
 
     for x in 0..x_dim {
         for y in 0..y_dim {
             let b = a.slice(s![x, y, ..]);
-            let mut buf = b
-                .map(|x| Complex { re: *x, im: 0.0 })
-                .as_slice()
-                .unwrap()
-                .to_vec();
+            let mut buf = b.as_slice().unwrap().to_vec();
             fft.process(&mut buf);
-            let buf: Array1<f64> = buf.iter().map(|x| (*x).re).collect();
+            let buf: Array1<Complex<f64>> = buf.into();
             a.slice_mut(s![x, y, ..]).assign(&buf);
         }
     }
@@ -81,11 +73,13 @@ pub fn fourier_grid() -> Array3<f64> {
     let mg = Meshgrid3::new(&samples, &samples, &samples);
     let mg = (mg / 2.).sin().pow(2);
 
-    let (kx, ky, kz) = mg.get();
+    let [kx, ky, kz] = mg.get();
     (kx + ky + kz).map(|x| x.max(DIV_BY_ZERO).recip())
 }
 #[cfg(test)]
 mod tests {
+    use crate::meshgrid::Meshgrid3;
+
     use super::sample_freq;
 
     #[test]
@@ -118,5 +112,15 @@ mod tests {
                 .zip(expected_result)
                 .for_each(|(a, b)| assert_eq!(*a, b));
         }
+    }
+
+    #[test]
+    fn test() {
+        let m = Meshgrid3::new(
+            &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
+            &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
+            &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
+        );
+        println!("{:?}", m.grid);
     }
 }

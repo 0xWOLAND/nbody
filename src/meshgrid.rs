@@ -4,8 +4,8 @@ use ndarray::{Array, Array2, Array3, ShapeBuilder};
 
 #[derive(Debug)]
 pub struct Meshgrid2 {
-    grid: Vec<(f64, f64)>,
-    dim: (usize, usize),
+    pub grid: Vec<(f64, f64)>,
+    pub dim: (usize, usize),
 }
 
 impl Meshgrid2 {
@@ -29,8 +29,8 @@ impl Meshgrid2 {
         Array::from_shape_vec(self.dim.f(), self.grid.iter().map(|x| x.1).collect()).unwrap()
     }
 
-    pub fn get(&self) -> (Array2<f64>, Array2<f64>) {
-        (self.x(), self.y())
+    pub fn get(&self) -> [Array2<f64>; 2] {
+        [self.x(), self.y()]
     }
 
     pub fn pow(&self, n: i32) -> Meshgrid2 {
@@ -164,8 +164,8 @@ impl ops::Div<Meshgrid2> for Meshgrid2 {
 
 #[derive(Debug)]
 pub struct Meshgrid3 {
-    grid: Vec<(f64, f64, f64)>,
-    dim: (usize, usize, usize),
+    pub grid: Vec<(f64, f64, f64)>,
+    pub dim: (usize, usize, usize),
 }
 
 impl Meshgrid3 {
@@ -203,8 +203,8 @@ impl Meshgrid3 {
         Array::from_shape_vec(self.dim.f(), self.grid.iter().map(|x| x.2).collect()).unwrap()
     }
 
-    pub fn get(&self) -> (Array3<f64>, Array3<f64>, Array3<f64>) {
-        (self.x(), self.y(), self.z())
+    pub fn get(&self) -> [Array3<f64>; 3] {
+        [self.x(), self.y(), self.z()]
     }
 
     pub fn pow(&self, n: i32) -> Meshgrid3 {
@@ -353,7 +353,7 @@ impl ops::Div<Meshgrid3> for Meshgrid3 {
 }
 
 #[cfg(test)]
-mod Tests {
+mod tests {
     use super::Meshgrid2;
 
     #[test]
