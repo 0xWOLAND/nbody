@@ -1,4 +1,4 @@
-use crate::config::{MASS, NUM_PARTICLES, N_CELLS};
+use crate::config::{MASS, N_CELLS, N_PARTICLES};
 use ndarray::{s, Array1, Array2, Array3, AssignElem};
 use rand::Rng;
 use std::fmt;
@@ -25,9 +25,9 @@ impl Particles {
     pub fn new() -> Particles {
         let mut rng = rand::thread_rng();
         let mut gen_particle_data = || {
-            Array1::<f64>::zeros(3 * NUM_PARTICLES)
+            Array1::<f64>::zeros(3 * N_PARTICLES)
                 .map(|_| N_CELLS as f64 * rng.gen::<f64>())
-                .into_shape((3, NUM_PARTICLES))
+                .into_shape((3, N_PARTICLES))
                 .unwrap()
         };
 

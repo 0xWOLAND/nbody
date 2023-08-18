@@ -14,7 +14,7 @@ fn density_k(mut density: Array3<f64>) -> Array3<f64> {
     density
 }
 
-fn potential_k(density: Array3<f64>, fgrid: Array3<f64>, t: f64) -> Array3<f64> {
+pub fn potential_k(density: Array3<f64>, fgrid: Array3<f64>, t: f64) -> Array3<f64> {
     (-3. * OMEGA_M0 / 8.0) as f64 / t * density * fgrid
 }
 

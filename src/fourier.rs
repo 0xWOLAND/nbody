@@ -53,7 +53,7 @@ pub fn inverse(a: &mut Array3<f64>) {
     }
 }
 
-fn sample_freq(n: &usize) -> Vec<f64> {
+pub fn sample_freq(n: &usize) -> Vec<f64> {
     let len = match n % 2 {
         0 => n / 2,
         _ => (n - 1) / 2 + 1,
@@ -70,6 +70,7 @@ fn sample_freq(n: &usize) -> Vec<f64> {
     res
 }
 
+// TODO use itertools
 pub fn fourier_grid() -> Array3<f64> {
     let scale = 2. * PI;
     let binding = sample_freq(&N_CELLS);
@@ -92,8 +93,12 @@ pub fn fourier_grid() -> Array3<f64> {
 }
 #[cfg(test)]
 mod tests {
-    use ndarray::{s, Array1, Array2, AssignElem};
+    use std::{f64::consts::PI, iter::Once};
+
+    use ndarray::{s, Array, Array1, Array2, Array3, ArrayView, AssignElem};
     use rustfft::{num_complex::Complex, FftPlanner};
+
+    use crate::config::{BOX_SIZE, N_PARTICLES};
 
     use super::sample_freq;
 
