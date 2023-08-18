@@ -1,9 +1,11 @@
 use std::f64::consts::PI;
 
-use crate::config::N_CELLS;
-use ndarray::{s, Array, Array1, Array3};
+use crate::{
+    config::{DIV_BY_ZERO, N_CELLS},
+    meshgrid::Meshgrid3,
+};
+use ndarray::{s, Array1, Array3};
 use rustfft::{num_complex::Complex, FftPlanner};
-use std::sync::Arc;
 
 pub fn forward(a: &mut Array3<f64>) {
     let (x_dim, y_dim, z_dim) = a.dim();
@@ -75,31 +77,15 @@ pub fn fourier_grid() -> Array3<f64> {
     let scale = 2. * PI;
     let binding = sample_freq(&N_CELLS);
     let samples: Vec<f64> = binding.iter().map(|x| scale * x).collect();
-    let n = samples.len();
 
-    let mut fgrid: Array3<f64> = Array3::zeros((n, n, n));
-    for i in 0..n {
-        for j in 0..n {
-            for k in 0..n {
-                let k_sq: f64 = [i, j, k]
-                    .map(|x| f64::sin(samples[x] / 2.).powi(2))
-                    .iter()
-                    .sum();
-                fgrid.slice_mut(s![i, j, k,]).fill(k_sq.recip());
-            }
-        }
-    }
-    fgrid
+    let mg = Meshgrid3::new(&samples, &samples, &samples);
+    let mg = (mg / 2.).sin().pow(2);
+
+    let (kx, ky, kz) = mg.get();
+    (kx + ky + kz).map(|x| x.max(DIV_BY_ZERO).recip())
 }
 #[cfg(test)]
 mod tests {
-    use std::{f64::consts::PI, iter::Once};
-
-    use ndarray::{s, Array, Array1, Array2, Array3, ArrayView, AssignElem};
-    use rustfft::{num_complex::Complex, FftPlanner};
-
-    use crate::config::{BOX_SIZE, N_PARTICLES};
-
     use super::sample_freq;
 
     #[test]
@@ -132,12 +118,5 @@ mod tests {
                 .zip(expected_result)
                 .for_each(|(a, b)| assert_eq!(*a, b));
         }
-    }
-
-    #[test]
-    fn test() {
-        let mut x: Array2<f64> = Array2::ones((3, 10));
-
-        println!("{:?}", x.slice(s![.., 1]));
     }
 }

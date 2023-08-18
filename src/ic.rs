@@ -1,10 +1,11 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, ops::Div};
 
 use ndarray::{Array, Array2, Array3};
 
 use crate::{
-    config::{BOX_SIZE, N_PARTICLES},
+    config::{BOX_SIZE, DIV_BY_ZERO, N_PARTICLES},
     fourier::{self, sample_freq},
+    meshgrid::Meshgrid3,
 };
 
 pub fn initial_conditions(mut density: Array3<f64>) -> (Array2<f64>, Array2<f64>) {
@@ -19,7 +20,7 @@ pub fn initial_conditions(mut density: Array3<f64>) -> (Array2<f64>, Array2<f64>
     (positions, velocities)
 }
 
-fn potential_k(density_k: Array3<f64>) {
+fn potential_k(density_k: Array3<f64>) -> Array3<f64> {
     let scale = 2. * PI * (N_PARTICLES as f64 / BOX_SIZE as f64);
     let kx: Vec<f64> = sample_freq(&N_PARTICLES)
         .iter()
@@ -28,5 +29,8 @@ fn potential_k(density_k: Array3<f64>) {
     let ky = kx.clone();
     let kz = kx.clone();
 
-    // let resother = Array::from_iter(kx.iter().cartesian_product(ky).cartesian_product(kz));
+    let (lx, ly, lz) = Meshgrid3::new(&kx, &ky, &kz).pow(2).get();
+    let laplace: Array3<f64> = -(lx + ly + lz);
+
+    density_k.div(laplace).map(|x| x.min(DIV_BY_ZERO.recip()))
 }

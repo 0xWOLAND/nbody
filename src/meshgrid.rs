@@ -1,3 +1,5 @@
+use std::ops;
+
 use ndarray::{Array, Array2, Array3, ShapeBuilder};
 
 #[derive(Debug)]
@@ -29,6 +31,134 @@ impl Meshgrid2 {
 
     pub fn get(&self) -> (Array2<f64>, Array2<f64>) {
         (self.x(), self.y())
+    }
+
+    pub fn pow(&self, n: i32) -> Meshgrid2 {
+        Meshgrid2 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (x.0.powi(n), x.1.powi(n)))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+
+    pub fn sin(&self) -> Meshgrid2 {
+        Meshgrid2 {
+            grid: self.grid.iter().map(|x| (x.1.sin(), x.1.sin())).collect(),
+            dim: self.dim,
+        }
+    }
+
+    pub fn cos(&self) -> Meshgrid2 {
+        Meshgrid2 {
+            grid: self.grid.iter().map(|x| (x.1.cos(), x.1.cos())).collect(),
+            dim: self.dim,
+        }
+    }
+
+    pub fn tan(&self) -> Meshgrid2 {
+        Meshgrid2 {
+            grid: self.grid.iter().map(|x| (x.1.tan(), x.1.tan())).collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Mul<f64> for Meshgrid2 {
+    type Output = Meshgrid2;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Meshgrid2 {
+            grid: self.grid.iter().map(|x| (rhs * x.0, rhs * x.1)).collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Mul<Meshgrid2> for Meshgrid2 {
+    type Output = Meshgrid2;
+
+    fn mul(self, rhs: Meshgrid2) -> Self::Output {
+        Meshgrid2 {
+            grid: self
+                .grid
+                .iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    (
+                        rhs.grid.get(i).unwrap().0 * x.0,
+                        rhs.grid.get(i).unwrap().1 * x.1,
+                    )
+                })
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Add<f64> for Meshgrid2 {
+    type Output = Meshgrid2;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Meshgrid2 {
+            grid: self.grid.iter().map(|x| (rhs + x.0, rhs + x.1)).collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Add<Meshgrid2> for Meshgrid2 {
+    type Output = Meshgrid2;
+
+    fn add(self, rhs: Meshgrid2) -> Self::Output {
+        Meshgrid2 {
+            grid: self
+                .grid
+                .iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    (
+                        rhs.grid.get(i).unwrap().0 + x.0,
+                        rhs.grid.get(i).unwrap().1 + x.1,
+                    )
+                })
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Div<f64> for Meshgrid2 {
+    type Output = Meshgrid2;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Meshgrid2 {
+            grid: self.grid.iter().map(|x| (x.0 / rhs, x.1 / rhs)).collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Div<Meshgrid2> for Meshgrid2 {
+    type Output = Meshgrid2;
+
+    fn div(self, rhs: Meshgrid2) -> Self::Output {
+        Meshgrid2 {
+            grid: self
+                .grid
+                .iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    (
+                        x.0 / rhs.grid.get(i).unwrap().0,
+                        x.1 / rhs.grid.get(i).unwrap().1,
+                    )
+                })
+                .collect(),
+            dim: self.dim,
+        }
     }
 }
 
@@ -75,6 +205,150 @@ impl Meshgrid3 {
 
     pub fn get(&self) -> (Array3<f64>, Array3<f64>, Array3<f64>) {
         (self.x(), self.y(), self.z())
+    }
+
+    pub fn pow(&self, n: i32) -> Meshgrid3 {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (x.0.powi(n), x.1.powi(n), x.2.powi(n)))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+
+    pub fn sin(&self) -> Meshgrid3 {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (x.0.sin(), x.1.sin(), x.2.sin()))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+
+    pub fn cos(&self) -> Meshgrid3 {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (x.0.cos(), x.1.cos(), x.2.cos()))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Mul<f64> for Meshgrid3 {
+    type Output = Meshgrid3;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (rhs * x.0, rhs * x.1, rhs * x.2))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Mul<Meshgrid3> for Meshgrid3 {
+    type Output = Meshgrid3;
+
+    fn mul(self, rhs: Meshgrid3) -> Self::Output {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    (
+                        rhs.grid.get(i).unwrap().0 * x.0,
+                        rhs.grid.get(i).unwrap().1 * x.1,
+                        rhs.grid.get(i).unwrap().2 * x.2,
+                    )
+                })
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Add<f64> for Meshgrid3 {
+    type Output = Meshgrid3;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (rhs + x.0, rhs + x.1, rhs + x.2))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Add<Meshgrid3> for Meshgrid3 {
+    type Output = Meshgrid3;
+
+    fn add(self, rhs: Meshgrid3) -> Self::Output {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    (
+                        rhs.grid.get(i).unwrap().0 + x.0,
+                        rhs.grid.get(i).unwrap().1 + x.1,
+                        rhs.grid.get(i).unwrap().2 + x.2,
+                    )
+                })
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Div<f64> for Meshgrid3 {
+    type Output = Meshgrid3;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .map(|x| (x.0 / rhs, x.1 / rhs, x.2 / rhs))
+                .collect(),
+            dim: self.dim,
+        }
+    }
+}
+
+impl ops::Div<Meshgrid3> for Meshgrid3 {
+    type Output = Meshgrid3;
+
+    fn div(self, rhs: Meshgrid3) -> Self::Output {
+        Meshgrid3 {
+            grid: self
+                .grid
+                .iter()
+                .enumerate()
+                .map(|(i, x)| {
+                    (
+                        x.0 / rhs.grid.get(i).unwrap().0,
+                        x.1 / rhs.grid.get(i).unwrap().1,
+                        x.2 / rhs.grid.get(i).unwrap().1,
+                    )
+                })
+                .collect(),
+            dim: self.dim,
+        }
     }
 }
 
