@@ -64,7 +64,6 @@ pub fn sample_freq(n: &usize) -> Vec<f64> {
     res
 }
 
-// TODO use itertools
 pub fn fourier_grid() -> Array3<f64> {
     let scale = 2. * PI;
     let binding = sample_freq(&N_CELLS);

@@ -6,3 +6,4 @@ pub mod integrate;
 pub mod meshgrid;
 pub mod particle_mesh;
 pub mod potential;
+pub mod random_field;
