@@ -8,5 +8,6 @@ pub const OMEGA_B0: f64 = 0.04;
 pub const OMEGA_K0: f64 = 0.00;
 pub const OMEGA_LAMBDA0: f64 = 0.69;
 pub const H0: f64 = 0.68;
+pub const A_INIT: f64 = 0.01; // Initial Growth Factor
 
 pub const DIV_BY_ZERO: f64 = 1e-34;
