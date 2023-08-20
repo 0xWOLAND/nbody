@@ -57,10 +57,10 @@ fn cic_weights(positions: &Array2<f64>, centered_cells: &Array2<f64>) -> Array2<
         t.slice_mut(s![1, i]).fill(dx * ty * tz);
         t.slice_mut(s![2, i]).fill(tx * dy * tz);
         t.slice_mut(s![3, i]).fill(dx * dy * tz);
-        t.slice_mut(s![4, i]).fill(tx * ty * tz);
-        t.slice_mut(s![5, i]).fill(dx * ty * tz);
-        t.slice_mut(s![6, i]).fill(dx * ty * tz);
-        t.slice_mut(s![7, i]).fill(dx * ty * tz);
+        t.slice_mut(s![4, i]).fill(tx * ty * dz);
+        t.slice_mut(s![5, i]).fill(dx * ty * dz);
+        t.slice_mut(s![6, i]).fill(tx * dy * dz);
+        t.slice_mut(s![7, i]).fill(dx * dy * dz);
     }
 
     t
