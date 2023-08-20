@@ -39,7 +39,7 @@ fn potential_k(density_k: &Array3<f64>) -> Array3<f64> {
     let [lx, ly, lz] = Meshgrid3::new(&kx, &ky, &kz).pow(2).get();
     let laplace: Array3<f64> = -(lx + ly + lz);
 
-    density_k.div(laplace).map(|x| x.min(DIV_BY_ZERO.recip()))
+    density_k.div(laplace).map(|x| x.min(DIV_BY_ZERO).recip())
 }
 
 fn zeldovich(potential_k: Array3<f64>, direction: usize) -> (Array1<f64>, Array1<f64>) {
