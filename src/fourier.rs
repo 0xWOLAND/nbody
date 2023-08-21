@@ -1,4 +1,4 @@
-use std::f64::consts::PI;
+use std::f64::{consts::PI, INFINITY};
 
 use crate::{
     config::{DIV_BY_ZERO, N_CELLS},
@@ -64,16 +64,19 @@ pub fn sample_freq(n: &usize) -> Vec<f64> {
     res
 }
 
-pub fn fourier_grid() -> Array3<f64> {
+pub fn fourier_grid() -> Meshgrid3 {
     let scale = 2. * PI;
     let binding = sample_freq(&N_CELLS);
     let samples: Vec<f64> = binding.iter().map(|x| scale * x).collect();
 
-    let mg = Meshgrid3::new(&samples, &samples, &samples);
-    let mg = (mg / 2.).sin().pow(2);
+    Meshgrid3::new(&samples, &samples, &samples)
+}
 
+pub fn ksq_inv() -> Array3<f64> {
+    let mg = fourier_grid();
+    let mg = (mg / 2.).sin().pow(2);
     let [kx, ky, kz] = mg.get();
-    (kx + ky + kz).map(|x| x.max(DIV_BY_ZERO).recip())
+    (kx + ky + kz).map(|x| x.max(INFINITY).recip())
 }
 #[cfg(test)]
 mod tests {

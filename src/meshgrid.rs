@@ -64,6 +64,11 @@ impl Meshgrid2 {
             dim: self.dim,
         }
     }
+    pub fn sum(&self) -> Array2<f64> {
+        self.get()
+            .iter()
+            .fold(Array2::<f64>::zeros(self.dim), |acc, cur| acc + cur)
+    }
 }
 
 impl ops::Mul<f64> for Meshgrid2 {
@@ -238,6 +243,12 @@ impl Meshgrid3 {
                 .collect(),
             dim: self.dim,
         }
+    }
+
+    pub fn sum(&self) -> Array3<f64> {
+        self.get()
+            .iter()
+            .fold(Array3::<f64>::zeros(self.dim), |acc, cur| acc + cur)
     }
 }
 
