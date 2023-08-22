@@ -4,10 +4,13 @@ use crate::{
     config::{DIV_BY_ZERO, N_CELLS},
     meshgrid::Meshgrid3,
 };
-use ndarray::{s, Array1, Array3};
-use rustfft::{num_complex::Complex, FftPlanner};
+use ndarray::{s, Array, Array1, Array3};
+use rustfft::{
+    num_complex::{Complex, Complex64},
+    FftPlanner,
+};
 
-pub fn forward(a: &mut Array3<Complex<f64>>) {
+pub fn forward(a: &Array3<Complex64>) -> Array3<Complex64> {
     let (x_dim, y_dim, z_dim) = a.dim();
 
     // Should be a cube matrix
@@ -15,6 +18,8 @@ pub fn forward(a: &mut Array3<Complex<f64>>) {
 
     let mut planner: FftPlanner<f64> = FftPlanner::new();
     let fft = planner.plan_fft_forward(z_dim);
+    let mut res: Array3<Complex64> =
+        Array::from_shape_simple_fn((x_dim, y_dim, z_dim), || Complex { re: 0., im: 0. });
 
     for x in 0..x_dim {
         for y in 0..y_dim {
@@ -22,12 +27,13 @@ pub fn forward(a: &mut Array3<Complex<f64>>) {
             let mut buf = b.as_slice().unwrap().to_vec();
             fft.process(&mut buf);
             let buf: Array1<Complex<f64>> = buf.into();
-            a.slice_mut(s![x, y, ..]).assign(&buf);
+            res.slice_mut(s![x, y, ..]).assign(&buf);
         }
     }
+    res
 }
 
-pub fn inverse(a: &mut Array3<Complex<f64>>) {
+pub fn inverse(a: Array3<Complex64>) -> Array3<Complex64> {
     let (x_dim, y_dim, z_dim) = a.dim();
 
     // Should be a cube matrix
@@ -35,6 +41,8 @@ pub fn inverse(a: &mut Array3<Complex<f64>>) {
 
     let mut planner: FftPlanner<f64> = FftPlanner::new();
     let fft = planner.plan_fft_inverse(z_dim);
+    let mut res: Array3<Complex64> =
+        Array::from_shape_simple_fn((x_dim, y_dim, z_dim), || Complex { re: 0., im: 0. });
 
     for x in 0..x_dim {
         for y in 0..y_dim {
@@ -42,9 +50,10 @@ pub fn inverse(a: &mut Array3<Complex<f64>>) {
             let mut buf = b.as_slice().unwrap().to_vec();
             fft.process(&mut buf);
             let buf: Array1<Complex<f64>> = buf.into();
-            a.slice_mut(s![x, y, ..]).assign(&buf);
+            res.slice_mut(s![x, y, ..]).assign(&buf);
         }
     }
+    res
 }
 
 pub fn sample_freq(n: &usize) -> Vec<f64> {
@@ -52,15 +61,13 @@ pub fn sample_freq(n: &usize) -> Vec<f64> {
         0 => n / 2,
         _ => (n - 1) / 2 + 1,
     };
-    let mut res: Vec<f64> = (0..=len)
+    let mut res: Vec<f64> = (0..len)
         .chain(0..(len - n % 2))
         .map(|x| (x as f64) / (*n as f64))
         .collect::<Vec<f64>>();
 
     res[len..].reverse();
-
     res[len..].iter_mut().for_each(|x| *x = -1. * (*x + 1.));
-
     res
 }
 
@@ -124,5 +131,10 @@ mod tests {
             &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
         );
         println!("{:?}", m.grid);
+    }
+    #[test]
+    fn check_3() {
+        let s = sample_freq(&3);
+        println!("{:?}", s);
     }
 }

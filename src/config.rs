@@ -1,4 +1,4 @@
-pub const N_CELLS: usize = 128;
+pub const N_CELLS: usize = 4;
 pub const N_PARTICLES: usize = 3;
 pub const BOX_SIZE: usize = 33;
 

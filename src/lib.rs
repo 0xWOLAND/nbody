@@ -1,5 +1,6 @@
 pub mod config;
 pub mod cosmology;
+pub mod density;
 pub mod fourier;
 pub mod ic;
 pub mod integrate;
@@ -7,3 +8,4 @@ pub mod meshgrid;
 pub mod particle_mesh;
 pub mod potential;
 pub mod random_field;
+pub mod utils;
