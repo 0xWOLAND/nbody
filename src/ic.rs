@@ -23,6 +23,8 @@ pub fn initial_conditions(density: Array3<f64>) -> (Array2<f64>, Array2<f64>) {
     for i in 0..=2 {
         let potential: Array3<Complex64> = potential_k(&density_k);
         let (_positions, _velocities): (Array1<f64>, Array1<f64>) = zeldovich(potential, i);
+        positions.slice_mut(s![i, ..]).assign(&_positions);
+        velocities.slice_mut(s![i, ..]).assign(&_velocities);
         println!(
             "{:?} {:?}",
             positions.slice_mut(s![i, ..]).shape(),
@@ -30,11 +32,9 @@ pub fn initial_conditions(density: Array3<f64>) -> (Array2<f64>, Array2<f64>) {
         );
         println!(
             "{:?} {:?}",
-            velocities.slice_mut(s![i, ..]).shape(),
+            velocities.slice(s![i, ..]),
             _velocities.shape()
         );
-        positions.slice_mut(s![i, ..]).assign(&_positions);
-        velocities.slice_mut(s![i, ..]).assign(&_velocities);
     }
 
     (positions, velocities)
@@ -113,7 +113,6 @@ fn approximate_velocity(displacement_field: &Array1<f64>) -> Array1<f64> {
     let dt_0 = D_t(A_INIT);
     let h = hubble_constant(A_INIT);
     let f = expansion_factor(A_INIT);
-
     displacement_field.map(|x| A_INIT * dt_0 * h * f * x)
 }
 
@@ -128,13 +127,18 @@ fn displacement_field_k(potential_k: Array3<Complex64>, direction: usize) -> Arr
     let lz = lx.clone();
 
     let mesh = Meshgrid3::new(&lx, &ly, &lz).get();
-    let l_direction = mesh.get(direction).unwrap();
-    (l_direction * potential_k).map(|x| -1. * resolution * *x * Complex::new(0., 1.))
+    let l_direction: &Array3<f64> = mesh.get(direction).unwrap();
+    println!("pk - {:?}", potential_k);
+    println!("l_dir - {:?}", l_direction);
+    println!("pk * l_dir - {:?}", potential_k.to_owned() * l_direction);
+    (l_direction * potential_k).map(|x| -1. * resolution * *x * Complex::new(1., 1.))
 }
 
 fn displacement_field_real(potential_k: Array3<Complex64>, direction: usize) -> Array1<f64> {
     let force_resolution = N_CELLS as f64 / BOX_SIZE as f64;
     let df_k: Array3<Complex64> = displacement_field_k(potential_k, direction);
-    let df_k: Array3<Complex64> = inverse(df_k);
-    Array::from_iter(df_k.map(|x| x.re * force_resolution))
+    println!("df_k: {:?}", df_k);
+    let df_real: Array3<Complex64> = inverse(df_k);
+    println!("df_real: {:?}", df_real);
+    Array::from_iter(df_real.map(|x| x.re * force_resolution))
 }

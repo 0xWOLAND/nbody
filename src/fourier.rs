@@ -63,12 +63,12 @@ pub fn sample_freq(n: &usize) -> Vec<f64> {
     };
     let mut res: Vec<f64> = (0..len)
         .chain(0..(len - n % 2))
-        .map(|x| (x as f64) / (*n as f64))
+        .map(|x| x as f64)
         .collect::<Vec<f64>>();
 
     res[len..].reverse();
     res[len..].iter_mut().for_each(|x| *x = -1. * (*x + 1.));
-    res
+    res.iter().map(|x| *x / (*n as f64)).collect::<Vec<f64>>()
 }
 
 pub fn fourier_grid() -> Meshgrid3 {
@@ -87,7 +87,12 @@ pub fn ksq_inv() -> Array3<f64> {
 }
 #[cfg(test)]
 mod tests {
-    use crate::meshgrid::Meshgrid3;
+    use std::f64::consts::PI;
+
+    use crate::{
+        config::{BOX_SIZE, N_PARTICLES},
+        meshgrid::Meshgrid3,
+    };
 
     use super::sample_freq;
 
@@ -135,6 +140,7 @@ mod tests {
     #[test]
     fn check_3() {
         let s = sample_freq(&3);
-        println!("{:?}", s);
+        let scale = 2. * PI * (N_PARTICLES as f64 / BOX_SIZE as f64);
+        println!("{:?}", s.iter().map(|x| x * scale).collect::<Vec<f64>>());
     }
 }

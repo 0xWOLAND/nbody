@@ -2,9 +2,9 @@ use ndarray::{s, Array2, Array3, Axis};
 
 use crate::config::N_CELLS;
 
-pub fn density(positions: Array2<f64>, mass: f64) -> Array3<f64> {
+pub fn density(positions: &Array2<f64>, mass: f64) -> Array3<f64> {
     let mut grid = Array3::<f64>::zeros((N_CELLS, N_CELLS, N_CELLS));
-    let len = positions.len_of(Axis(0));
+    let len = positions.len_of(Axis(1));
 
     for i in 0..len {
         let x_c = positions.get((0, i)).unwrap().floor() as usize % N_CELLS;

@@ -9,7 +9,7 @@ pub fn update(
     fgrid: Array3<f64>,
     t: f64,
     dt: f64,
-) {
+) -> (Array2<f64>, Array2<f64>) {
     let potentials = potential(density, fgrid, t);
     let f_a = expansion_factor(t);
     integrate(positions, velocities, potentials, t, f_a, dt)
@@ -22,7 +22,7 @@ fn integrate(
     t: f64,
     f_a: f64,
     dt: f64,
-) {
+) -> (Array2<f64>, Array2<f64>) {
     let centered_cells: Array2<f64> = positions.map(|x| x.floor());
     let weights = cic_weights(&positions, &centered_cells);
 
@@ -40,11 +40,15 @@ fn integrate(
         );
         positions.slice_mut(s![i, ..]).assign(&next_position);
         velocities.slice_mut(s![i, ..]).assign(&next_velocity);
+        println!("p: {:?}", positions.slice(s![2, 0..4]));
+        println!("v: {:?}", velocities.slice(s![2, 0..4]));
+        println!("np: {:?}", next_position.slice(s![0..4]));
     }
+    (positions, velocities)
 }
 
 fn cic_weights(positions: &Array2<f64>, centered_cells: &Array2<f64>) -> Array2<f64> {
-    let len = positions.len_of(Axis(0));
+    let len = positions.len_of(Axis(1));
     let mut t: Array2<f64> = Array2::zeros((8, len));
     let diff: Array2<f64> = positions - centered_cells;
     for i in 0..len {

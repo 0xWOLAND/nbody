@@ -8,7 +8,6 @@ pub fn array_3_to_image(
     width: Option<usize>,
 ) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let x: Vec<u8> = a.into_raw_vec();
-    println!("{:?} {:?}", x, IMG_WIDTH);
     RgbImage::from_raw(
         width.unwrap_or(IMG_WIDTH) as u32,
         width.unwrap_or(IMG_WIDTH) as u32,
