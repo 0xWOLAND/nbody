@@ -21,7 +21,7 @@ mod tests {
             initial_conditions(rho.clone());
 
         let img = array_2_to_image(positions.clone(), N_CELLS);
-        img.save("positions0.png");
+        img.save("./img/positions0.png");
         let fgrid = ksq_inv();
         for t in (1..=300).step_by(10) {
             let den = density(&positions, average_density);

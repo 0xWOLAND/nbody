@@ -1,6 +1,6 @@
-pub const N_CELLS: usize = 64;
-pub const N_PARTICLES: usize = 32;
-pub const BOX_SIZE: usize = 16;
+pub const N_CELLS: usize = 32;
+pub const N_PARTICLES: usize = 16;
+pub const BOX_SIZE: usize = 8;
 
 pub const MASS: f64 = 4.0;
 pub const OMEGA_M0: f64 = 0.31;

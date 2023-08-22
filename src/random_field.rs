@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub fn gaussian_random_field(power: f64, amplitude: f64) -> Array3<f64> {
-    let gaussian_dist = Normal::new(0.0, 1.0).unwrap();
+    let gaussian_dist = Normal::new(0., 1.0).unwrap();
     let mut seed =
         Array::from_shape_simple_fn((N_PARTICLES, N_PARTICLES, N_PARTICLES), || Complex64 {
             re: gaussian_dist.sample(&mut rand::thread_rng()),

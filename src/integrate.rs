@@ -1,4 +1,5 @@
 use ndarray::{s, Array1, Array2, Array3, ArrayViewMut1, Axis};
+use rand_distr::num_traits::ToPrimitive;
 
 use crate::{config::N_CELLS, cosmology::expansion_factor, potential::potential};
 
@@ -81,17 +82,21 @@ fn interpolate(
     dt: &f64,
     axis: i32,
 ) -> (Array1<f64>, Array1<f64>) {
-    let mut n_next = centered_cells.clone();
-    let mut n_prev = centered_cells.clone();
+    println!("potentials shape: {:?}", potentials.shape());
+    let mut n_next: Array2<f64> = centered_cells.clone();
+    let mut n_prev: Array2<f64> = centered_cells.clone();
     let n_cells = N_CELLS as f64;
 
     n_next.slice_mut(s![axis, ..]).iter_mut().for_each(|x| {
-        *x = (*x - 1.0 + n_cells) % n_cells;
+        *x = *x + 1.;
     });
 
     n_prev.slice_mut(s![axis, ..]).iter_mut().for_each(|x| {
-        *x = (*x + 1.0) % n_cells;
+        *x = *x - 1.;
     });
+
+    let n_next: Array2<f64> = n_next.map(|x| x.rem_euclid(n_cells));
+    let n_prev: Array2<f64> = n_prev.map(|x| x.rem_euclid(n_cells));
 
     let len = positions.len_of(Axis(0));
     let mut next_velocities: Array1<f64> = Array1::zeros(len);
@@ -109,7 +114,6 @@ fn interpolate(
         let [X2, Y2, Z2] = [x2, y2, z2].map(|x| (x + 1) % N_CELLS);
 
         let weight = cic_weights.slice(s![.., i]);
-
         let g = potentials.get((x2, y2, z2)).unwrap() - potentials.get((x1, y1, z1)).unwrap();
         let g_x = potentials.get((X2, y2, z2)).unwrap() - potentials.get((X1, y1, z1)).unwrap();
         let g_y = potentials.get((x2, Y2, z2)).unwrap() - potentials.get((x1, Y1, z1)).unwrap();
