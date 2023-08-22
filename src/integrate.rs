@@ -6,7 +6,7 @@ pub fn update(
     density: Array3<f64>,
     positions: Array2<f64>,
     velocities: Array2<f64>,
-    fgrid: Array3<f64>,
+    fgrid: &Array3<f64>,
     t: f64,
     dt: f64,
 ) -> (Array2<f64>, Array2<f64>) {
