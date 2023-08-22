@@ -1,7 +1,7 @@
 use image::{ImageBuffer, RgbImage};
 use ndarray::{s, Array, Array2, Array3, Axis};
 
-use crate::config::{IMG_WIDTH, N_CELLS};
+use crate::config::{IMG_WIDTH, N_CELLS, N_PARTICLES};
 
 pub fn array_3_to_image(
     a: Array3<u8>,
@@ -33,8 +33,9 @@ pub fn array_2_to_image(arr: Array2<f64>, width: usize) -> ImageBuffer<image::Rg
 }
 
 use plotters::prelude::*;
-pub fn hist(arr: Vec<u32>) {
-    const OUT_FILE_NAME: &'static str = "img/histogram.png";
+pub fn hist(arr: Vec<u32>, title: Option<String>) {
+    let title = title.unwrap_or_else(|| String::from("histogram"));
+    let OUT_FILE_NAME = &format!("img/{}.png", title);
     let root = BitMapBackend::new(OUT_FILE_NAME, (640, 480)).into_drawing_area();
 
     root.fill(&WHITE).unwrap();
@@ -43,8 +44,11 @@ pub fn hist(arr: Vec<u32>) {
         .x_label_area_size(35)
         .y_label_area_size(40)
         .margin(5)
-        .caption("Histogram Test", ("sans-serif", 50.0))
-        .build_cartesian_2d((0u32..10u32).into_segmented(), 0u32..10u32)
+        .caption(title, ("sans-serif", 50.0))
+        .build_cartesian_2d(
+            (0u32..(N_CELLS as u32 + 1)).into_segmented(),
+            0u32..(N_PARTICLES.pow(2) as u32),
+        )
         .unwrap();
 
     chart
@@ -65,7 +69,6 @@ pub fn hist(arr: Vec<u32>) {
         )
         .unwrap();
 
-    // To avoid the IO failure being ignored silently, we manually call the present function
     root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
     println!("Result has been saved to {}", OUT_FILE_NAME);
 }
@@ -76,6 +79,6 @@ mod tests {
 
     #[test]
     fn test_hist() {
-        hist((1..20).collect::<Vec<u32>>());
+        hist((1..20).collect::<Vec<u32>>(), None);
     }
 }
