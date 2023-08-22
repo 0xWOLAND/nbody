@@ -34,7 +34,7 @@ pub fn gaussian_random_field(power: f64, amplitude: f64) -> Array3<f64> {
     }
 
     if power < 3. {
-        let norms_real_mid = (N_CELLS as f64 / 2.).floor() as usize;
+        let norms_real_mid = (N_PARTICLES as f64 / 2.).floor() as usize;
         knorms
             .slice_mut(s![norms_real_mid, norms_real_mid, norms_real_mid])
             .fill(INFINITY);
@@ -65,7 +65,6 @@ mod tests {
 
         let image = array_3_to_image(
             gaussian_random_field(power, amp).map(|x| (*x * 100.) as u8),
-            None,
             None,
         );
         image.save("./out.png");
