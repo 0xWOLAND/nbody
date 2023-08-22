@@ -47,7 +47,7 @@ pub fn hist(arr: Vec<u32>, title: Option<String>) {
         .caption(title, ("sans-serif", 50.0))
         .build_cartesian_2d(
             (0u32..(N_CELLS as u32 + 1)).into_segmented(),
-            0u32..(N_PARTICLES.pow(2) as u32),
+            0u32..(2 * N_PARTICLES.pow(2) as u32),
         )
         .unwrap();
 
