@@ -25,10 +25,8 @@ mod tests {
         let t = A_INIT;
         let dt = 100.;
         let den = density(&positions, average_density);
-        println!("p1 {:?}", positions);
         let (positions, velocities): (Array2<f64>, Array2<f64>) =
             update(den, positions, velocities, fgrid, t, dt);
-        println!("p2 {:?}", positions);
         let img = array_2_to_image(positions.clone(), N_CELLS);
         img.save("positions2.png");
     }
