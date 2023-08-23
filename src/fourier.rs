@@ -10,6 +10,7 @@ use rustfft::{
     FftPlanner,
 };
 
+// TODO use ofuton
 pub fn forward(a: &Array3<Complex64>) -> Array3<Complex64> {
     let (x_dim, y_dim, z_dim) = a.dim();
 
@@ -30,10 +31,30 @@ pub fn forward(a: &Array3<Complex64>) -> Array3<Complex64> {
             res.slice_mut(s![x, y, ..]).assign(&buf);
         }
     }
+
+    for x in 0..x_dim {
+        for z in 0..z_dim {
+            let b = res.slice(s![x, .., z]);
+            let mut buf = b.to_vec();
+            fft.process(&mut buf);
+            let buf: Array1<Complex<f64>> = buf.into();
+            res.slice_mut(s![x, .., z]).assign(&buf);
+        }
+    }
+
+    for y in 0..y_dim {
+        for z in 0..z_dim {
+            let b = res.slice(s![.., y, z]);
+            let mut buf = b.to_vec();
+            fft.process(&mut buf);
+            let buf: Array1<Complex<f64>> = buf.into();
+            res.slice_mut(s![.., y, z]).assign(&buf);
+        }
+    }
     res
 }
 
-pub fn inverse(a: Array3<Complex64>) -> Array3<Complex64> {
+pub fn inverse(a: &Array3<Complex64>) -> Array3<Complex64> {
     let (x_dim, y_dim, z_dim) = a.dim();
 
     // Should be a cube matrix
@@ -51,6 +72,26 @@ pub fn inverse(a: Array3<Complex64>) -> Array3<Complex64> {
             fft.process(&mut buf);
             let buf: Array1<Complex<f64>> = buf.into();
             res.slice_mut(s![x, y, ..]).assign(&buf);
+        }
+    }
+
+    for x in 0..x_dim {
+        for z in 0..z_dim {
+            let b = res.slice(s![x, .., z]);
+            let mut buf = b.to_vec();
+            fft.process(&mut buf);
+            let buf: Array1<Complex<f64>> = buf.into();
+            res.slice_mut(s![x, .., z]).assign(&buf);
+        }
+    }
+
+    for y in 0..y_dim {
+        for z in 0..z_dim {
+            let b = res.slice(s![.., y, z]);
+            let mut buf = b.to_vec();
+            fft.process(&mut buf);
+            let buf: Array1<Complex<f64>> = buf.into();
+            res.slice_mut(s![.., y, z]).assign(&buf);
         }
     }
     res
@@ -82,8 +123,8 @@ pub fn fourier_grid() -> Meshgrid3 {
 pub fn ksq_inv() -> Array3<f64> {
     let mg = fourier_grid();
     let mg = (mg / 2.).sin().pow(2);
-    let [kx, ky, kz] = mg.get();
-    (kx + ky + kz).map(|x| x.max(INFINITY).recip())
+    let [kx, ky, kz]: [Array3<f64>; 3] = mg.get();
+    (kx + ky + kz).map(|x| if *x < DIV_BY_ZERO { 0. } else { x.recip() })
 }
 #[cfg(test)]
 mod tests {
@@ -91,6 +132,7 @@ mod tests {
 
     use crate::{
         config::{BOX_SIZE, N_PARTICLES},
+        fourier::ksq_inv,
         meshgrid::Meshgrid3,
     };
 
@@ -142,5 +184,9 @@ mod tests {
         let s = sample_freq(&3);
         let scale = 2. * PI * (N_PARTICLES as f64 / BOX_SIZE as f64);
         println!("{:?}", s.iter().map(|x| x * scale).collect::<Vec<f64>>());
+    }
+    #[test]
+    fn get_fourier_grid() {
+        println!("{:?}", ksq_inv());
     }
 }

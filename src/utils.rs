@@ -24,7 +24,7 @@ pub fn array_2_to_image(arr: Array2<f64>, width: usize) -> ImageBuffer<image::Rg
         let idx: Vec<usize> = arr
             .slice(s![.., i])
             .iter()
-            .map(|x| ((*x * (IMG_WIDTH / N_CELLS) as f64) as usize + IMG_WIDTH) % IMG_WIDTH)
+            .map(|x| ((*x * (IMG_WIDTH / N_CELLS) as f64) as usize).rem_euclid(IMG_WIDTH))
             .collect();
         a.slice_mut(s![idx[0], idx[1], ..]).fill(255.);
     }

@@ -84,7 +84,7 @@ fn approximate_positions(displacement_field: &Array1<f64>, direction: usize) -> 
         positions
             .iter()
             .zip(displacement_field)
-            .map(|(a, b)| (a + linear_growth_factor * b) % (N_CELLS as f64)),
+            .map(|(a, b)| (a + linear_growth_factor * b).rem_euclid(N_CELLS as f64)),
     );
     assert!(
         positions.len() == N_PARTICLES.pow(3),
@@ -121,6 +121,6 @@ fn displacement_field_k(potential_k: Array3<Complex64>, direction: usize) -> Arr
 fn displacement_field_real(potential_k: Array3<Complex64>, direction: usize) -> Array1<f64> {
     let force_resolution = N_CELLS as f64 / BOX_SIZE as f64;
     let df_k: Array3<Complex64> = displacement_field_k(potential_k, direction);
-    let df_real: Array3<Complex64> = inverse(df_k);
+    let df_real: Array3<Complex64> = inverse(&df_k);
     Array::from_iter(df_real.map(|x| x.re * force_resolution))
 }

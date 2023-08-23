@@ -48,7 +48,7 @@ pub fn gaussian_random_field(power: f64, amplitude: f64) -> Array3<f64> {
         Array::from_iter(seed.iter().zip(power_spectrum_sqrt).map(|(a, b)| a * b)).to_vec(),
     )
     .unwrap();
-    let realization_real: Array3<Complex64> = inverse(realization_k.clone());
+    let realization_real: Array3<Complex64> = inverse(&realization_k);
     realization_real.map(|x| x.re)
 }
 

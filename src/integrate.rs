@@ -11,7 +11,7 @@ pub fn update(
     t: f64,
     dt: f64,
 ) -> (Array2<f64>, Array2<f64>) {
-    let potentials = potential(density, fgrid, t);
+    let potentials: Array3<f64> = potential(density, fgrid, t);
     let f_a = expansion_factor(t);
     integrate(positions, velocities, potentials, t, f_a, dt)
 }
@@ -41,10 +41,9 @@ fn integrate(
         );
         positions.slice_mut(s![i, ..]).assign(&next_position);
         velocities.slice_mut(s![i, ..]).assign(&next_velocity);
-        println!("p: {:?}", positions.slice(s![2, 0..4]));
-        println!("v: {:?}", velocities.slice(s![2, 0..4]));
-        println!("np: {:?}", next_position.slice(s![0..4]));
     }
+    println!("p: {:?}", positions);
+    println!("v: {:?}", velocities);
     (positions, velocities)
 }
 
@@ -82,7 +81,6 @@ fn interpolate(
     dt: &f64,
     axis: i32,
 ) -> (Array1<f64>, Array1<f64>) {
-    println!("potentials shape: {:?}", potentials.shape());
     let mut n_next: Array2<f64> = centered_cells.clone();
     let mut n_prev: Array2<f64> = centered_cells.clone();
     let n_cells = N_CELLS as f64;
@@ -110,8 +108,8 @@ fn interpolate(
         let y2 = *(n_next.get((1, i)).unwrap()) as usize;
         let z2 = *(n_next.get((2, i)).unwrap()) as usize;
 
-        let [X1, Y1, Z1] = [x1, y1, z1].map(|x| (x + 1) % N_CELLS);
-        let [X2, Y2, Z2] = [x2, y2, z2].map(|x| (x + 1) % N_CELLS);
+        let [X1, Y1, Z1] = [x1, y1, z1].map(|x| (x + 1).rem_euclid(N_CELLS));
+        let [X2, Y2, Z2] = [x2, y2, z2].map(|x| (x + 1).rem_euclid(N_CELLS));
 
         let weight = cic_weights.slice(s![.., i]);
         let g = potentials.get((x2, y2, z2)).unwrap() - potentials.get((x1, y1, z1)).unwrap();
