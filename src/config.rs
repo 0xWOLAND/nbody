@@ -1,6 +1,6 @@
-pub const N_PARTICLES: usize = 20;
-pub const N_CELLS: usize = 32;
-pub const BOX_SIZE: usize = 10;
+pub const N_PARTICLES: usize = 10;
+pub const N_CELLS: usize = 16;
+pub const BOX_SIZE: usize = 5;
 
 // pub const N_PARTICLES: usize = 6;
 // pub const N_CELLS: usize = 32;
@@ -13,7 +13,7 @@ pub const OMEGA_K0: f64 = 0.00;
 pub const OMEGA_LAMBDA0: f64 = 0.69;
 pub const H0: f64 = 0.68;
 pub const A_INIT: f64 = 0.01; // Initial Growth Factor
-pub const A_END: f64 = 1.00; // Final scale factor
+pub const A_END: f64 = 100.00; // Final scale factor
 pub const STEPS: f64 = 1000.; // Number of timesteps
 pub const N_PLOTS: f64 = 100.; // Number of timesteps
 

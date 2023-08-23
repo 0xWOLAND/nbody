@@ -42,8 +42,6 @@ fn integrate(
         positions.slice_mut(s![i, ..]).assign(&next_position);
         velocities.slice_mut(s![i, ..]).assign(&next_velocity);
     }
-    println!("p: {:?}", positions);
-    println!("v: {:?}", velocities);
     (positions, velocities)
 }
 
@@ -60,8 +58,8 @@ fn cic_weights(positions: &Array2<f64>, centered_cells: &Array2<f64>) -> Array2<
         t.slice_mut(s![0, i]).fill(tx * ty * tz);
         t.slice_mut(s![1, i]).fill(dx * ty * tz);
         t.slice_mut(s![2, i]).fill(tx * dy * tz);
-        t.slice_mut(s![3, i]).fill(dx * dy * tz);
-        t.slice_mut(s![4, i]).fill(tx * ty * dz);
+        t.slice_mut(s![3, i]).fill(tx * ty * dz);
+        t.slice_mut(s![4, i]).fill(dx * dx * tz);
         t.slice_mut(s![5, i]).fill(dx * ty * dz);
         t.slice_mut(s![6, i]).fill(tx * dy * dz);
         t.slice_mut(s![7, i]).fill(dx * dy * dz);
@@ -81,45 +79,47 @@ fn interpolate(
     dt: &f64,
     axis: i32,
 ) -> (Array1<f64>, Array1<f64>) {
-    let mut n_next: Array2<f64> = centered_cells.clone();
-    let mut n_prev: Array2<f64> = centered_cells.clone();
+    let mut cc_p: Array2<f64> = centered_cells.clone();
+    let mut cc_n: Array2<f64> = centered_cells.clone();
     let n_cells = N_CELLS as f64;
 
-    n_next.slice_mut(s![axis, ..]).iter_mut().for_each(|x| {
+    cc_p.slice_mut(s![axis, ..]).iter_mut().for_each(|x| {
         *x = *x + 1.;
     });
 
-    n_prev.slice_mut(s![axis, ..]).iter_mut().for_each(|x| {
+    cc_n.slice_mut(s![axis, ..]).iter_mut().for_each(|x| {
         *x = *x - 1.;
     });
 
-    let n_next: Array2<f64> = n_next.map(|x| x.rem_euclid(n_cells));
-    let n_prev: Array2<f64> = n_prev.map(|x| x.rem_euclid(n_cells));
+    let cc_p: Array2<f64> = cc_p.map(|x| x.rem_euclid(n_cells));
+    let cc_n: Array2<f64> = cc_n.map(|x| x.rem_euclid(n_cells));
 
     let len = positions.len_of(Axis(0));
     let mut next_velocities: Array1<f64> = Array1::zeros(len);
     let mut next_positions: Array1<f64> = Array1::zeros(len);
 
     for i in 0..len {
-        let x1 = *(n_prev.get((0, i)).unwrap()) as usize;
-        let y1 = *(n_prev.get((1, i)).unwrap()) as usize;
-        let z1 = *(n_prev.get((2, i)).unwrap()) as usize;
-        let x2 = *(n_next.get((0, i)).unwrap()) as usize;
-        let y2 = *(n_next.get((1, i)).unwrap()) as usize;
-        let z2 = *(n_next.get((2, i)).unwrap()) as usize;
+        let x1 = *(cc_n.get((0, i)).unwrap()) as usize;
+        let y1 = *(cc_n.get((1, i)).unwrap()) as usize;
+        let z1 = *(cc_n.get((2, i)).unwrap()) as usize;
+
+        let x2 = *(cc_p.get((0, i)).unwrap()) as usize;
+        let y2 = *(cc_p.get((1, i)).unwrap()) as usize;
+        let z2 = *(cc_p.get((2, i)).unwrap()) as usize;
 
         let [X1, Y1, Z1] = [x1, y1, z1].map(|x| (x + 1).rem_euclid(N_CELLS));
         let [X2, Y2, Z2] = [x2, y2, z2].map(|x| (x + 1).rem_euclid(N_CELLS));
 
         let weight = cic_weights.slice(s![.., i]);
-        let g = potentials.get((x2, y2, z2)).unwrap() - potentials.get((x1, y1, z1)).unwrap();
-        let g_x = potentials.get((X2, y2, z2)).unwrap() - potentials.get((X1, y1, z1)).unwrap();
-        let g_y = potentials.get((x2, Y2, z2)).unwrap() - potentials.get((x1, Y1, z1)).unwrap();
-        let g_z = potentials.get((x2, y2, Z2)).unwrap() - potentials.get((x1, y1, Z1)).unwrap();
-        let g_xy = potentials.get((X2, Y2, z2)).unwrap() - potentials.get((X1, Y1, z1)).unwrap();
-        let g_xz = potentials.get((X2, y2, Z2)).unwrap() - potentials.get((X1, y1, Z1)).unwrap();
-        let g_yz = potentials.get((x2, Y2, Z2)).unwrap() - potentials.get((x1, Y1, Z1)).unwrap();
-        let g_xyz = potentials.get((X2, Y2, Z2)).unwrap() - potentials.get((X1, Y1, Z1)).unwrap();
+        let g = potentials.get((z2, y2, x2)).unwrap() - potentials.get((z1, y1, x1)).unwrap();
+        let g_x: f64 =
+            potentials.get((z2, y2, X2)).unwrap() - potentials.get((z1, y1, X1)).unwrap();
+        let g_y = potentials.get((z2, Y2, x2)).unwrap() - potentials.get((z1, Y1, x1)).unwrap();
+        let g_z = potentials.get((Z2, y2, x2)).unwrap() - potentials.get((Z1, y1, x1)).unwrap();
+        let g_xy = potentials.get((z2, Y2, X2)).unwrap() - potentials.get((z1, Y1, X1)).unwrap();
+        let g_xz = potentials.get((Z2, y2, X2)).unwrap() - potentials.get((Z1, y1, X1)).unwrap();
+        let g_yz = potentials.get((Z2, Y2, x2)).unwrap() - potentials.get((Z1, Y1, x1)).unwrap();
+        let g_xyz = potentials.get((Z2, Y2, X2)).unwrap() - potentials.get((Z1, Y1, X1)).unwrap();
         let g_p = [g, g_x, g_y, g_z, g_xy, g_xz, g_yz, g_xyz]
             .iter()
             .zip(weight)
@@ -131,7 +131,7 @@ fn interpolate(
         next_velocities.slice_mut(s![i]).fill(v + dt * f_a * g_p);
         next_positions
             .slice_mut(s![i])
-            .fill(x + dt * v * f_a * f64::sqrt(t + dt));
+            .fill((x + dt * v / (t + dt).powi(2) * f_a).rem_euclid(n_cells));
     }
     (next_positions, next_velocities)
 }

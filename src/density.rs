@@ -12,43 +12,43 @@ pub fn density(positions: &Array2<f64>, mass: f64) -> Array3<f64> {
         let y = positions.get((1, i)).unwrap();
         let z = positions.get((2, i)).unwrap();
 
-        let x_c = (positions.get((0, i)).unwrap().floor() as usize).rem_euclid(N_CELLS);
-        let y_c = (positions.get((1, i)).unwrap().floor() as usize).rem_euclid(N_CELLS);
-        let z_c = (positions.get((2, i)).unwrap().floor() as usize).rem_euclid(N_CELLS);
+        let x_c = (x.floor() as usize).rem_euclid(N_CELLS);
+        let y_c = (y.floor() as usize).rem_euclid(N_CELLS);
+        let z_c = (z.floor() as usize).rem_euclid(N_CELLS);
 
-        let d_x = positions.get((0, i)).unwrap() - (x_c as f64);
-        let d_y = positions.get((1, i)).unwrap() - (y_c as f64);
-        let d_z = positions.get((2, i)).unwrap() - (z_c as f64);
+        let d_x = x - (x_c as f64);
+        let d_y = y - (y_c as f64);
+        let d_z = z - (z_c as f64);
 
         let [t_x, t_y, t_z] = [d_x, d_y, d_z].map(|x| 1. - x);
 
         let [X, Y, Z] = [x_c, y_c, z_c].map(|x| (x + 1).rem_euclid(N_CELLS));
 
-        grid.slice_mut(s![x_c, y_c, z_c])
+        grid.slice_mut(s![z_c, y_c, x_c])
             .iter_mut()
             .for_each(|x| *x += mass * t_x * t_y * t_z);
 
-        grid.slice_mut(s![X, y_c, z_c])
+        grid.slice_mut(s![z_c, y_c, X])
             .iter_mut()
             .for_each(|x| *x += mass * d_x * t_y * t_z);
-        grid.slice_mut(s![x_c, Y, z_c])
+        grid.slice_mut(s![z_c, Y, x_c])
             .iter_mut()
             .for_each(|x| *x += mass * t_x * d_y * t_z);
-        grid.slice_mut(s![x_c, y_c, Z])
+        grid.slice_mut(s![Z, y_c, x_c])
             .iter_mut()
             .for_each(|x| *x += mass * t_x * t_y * d_z);
 
-        grid.slice_mut(s![X, Y, z_c])
+        grid.slice_mut(s![z_c, Y, X])
             .iter_mut()
             .for_each(|x| *x += mass * d_x * d_y * t_z);
-        grid.slice_mut(s![X, y_c, Z])
-            .iter_mut()
-            .for_each(|x| *x += mass * d_x * t_y * d_z);
-        grid.slice_mut(s![x_c, Y, Z])
+        grid.slice_mut(s![Z, Y, x_c])
             .iter_mut()
             .for_each(|x| *x += mass * t_x * d_y * d_z);
+        grid.slice_mut(s![Z, y_c, X])
+            .iter_mut()
+            .for_each(|x| *x += mass * d_x * t_y * d_z);
 
-        grid.slice_mut(s![X, Y, Z])
+        grid.slice_mut(s![Z, Y, X])
             .iter_mut()
             .for_each(|x| *x += mass * d_x * d_y * d_z);
     }

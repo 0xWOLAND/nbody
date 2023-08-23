@@ -5,96 +5,45 @@ use crate::{
     meshgrid::Meshgrid3,
 };
 use ndarray::{s, Array, Array1, Array3};
-use rustfft::{
-    num_complex::{Complex, Complex64},
-    FftPlanner,
-};
+use ndrustfft::{ndfft, ndifft, FftHandler};
+use rustfft::{num_complex::Complex, FftPlanner};
 
-// TODO use ofuton
-pub fn forward(a: &Array3<Complex64>) -> Array3<Complex64> {
-    let (x_dim, y_dim, z_dim) = a.dim();
+pub fn forward(a: &Array3<Complex<f64>>) -> Array3<Complex<f64>> {
+    let (nx, ny, nz) = a.dim();
 
-    // Should be a cube matrix
-    assert!(x_dim == y_dim && y_dim == z_dim);
+    let mut vhat: Array3<Complex<f64>> = Array3::zeros((nx, ny, nz));
 
-    let mut planner: FftPlanner<f64> = FftPlanner::new();
-    let fft = planner.plan_fft_forward(z_dim);
-    let mut res: Array3<Complex64> =
-        Array::from_shape_simple_fn((x_dim, y_dim, z_dim), || Complex { re: 0., im: 0. });
+    let mut handler_ax0 = FftHandler::<f64>::new(nx);
+    let mut handler_ax1 = FftHandler::<f64>::new(ny);
+    let mut handler_ax2 = FftHandler::<f64>::new(nz);
 
-    for x in 0..x_dim {
-        for y in 0..y_dim {
-            let b = a.slice(s![x, y, ..]);
-            let mut buf = b.as_slice().unwrap().to_vec();
-            fft.process(&mut buf);
-            let buf: Array1<Complex<f64>> = buf.into();
-            res.slice_mut(s![x, y, ..]).assign(&buf);
-        }
-    }
+    let mut work2: Array3<Complex<f64>> = Array3::zeros((nx, ny, nz));
+    let mut work1: Array3<Complex<f64>> = Array3::zeros((nx, ny, nz));
 
-    for x in 0..x_dim {
-        for z in 0..z_dim {
-            let b = res.slice(s![x, .., z]);
-            let mut buf = b.to_vec();
-            fft.process(&mut buf);
-            let buf: Array1<Complex<f64>> = buf.into();
-            res.slice_mut(s![x, .., z]).assign(&buf);
-        }
-    }
+    ndfft(&a, &mut work2, &mut handler_ax2, 2);
+    ndfft(&work2, &mut work1, &mut handler_ax1, 1);
+    ndfft(&work1, &mut vhat, &mut handler_ax0, 0);
 
-    for y in 0..y_dim {
-        for z in 0..z_dim {
-            let b = res.slice(s![.., y, z]);
-            let mut buf = b.to_vec();
-            fft.process(&mut buf);
-            let buf: Array1<Complex<f64>> = buf.into();
-            res.slice_mut(s![.., y, z]).assign(&buf);
-        }
-    }
-    res
+    vhat
 }
 
-pub fn inverse(a: &Array3<Complex64>) -> Array3<Complex64> {
-    let (x_dim, y_dim, z_dim) = a.dim();
+pub fn inverse(a: &Array3<Complex<f64>>) -> Array3<Complex<f64>> {
+    let (nx, ny, nz) = a.dim();
 
-    // Should be a cube matrix
-    assert!(x_dim == y_dim && y_dim == z_dim);
+    let mut vhat: Array3<Complex<f64>> = Array3::zeros((nx, ny, nz));
 
-    let mut planner: FftPlanner<f64> = FftPlanner::new();
-    let fft = planner.plan_fft_inverse(z_dim);
-    let mut res: Array3<Complex64> =
-        Array::from_shape_simple_fn((x_dim, y_dim, z_dim), || Complex { re: 0., im: 0. });
+    let mut handler_ax0 = FftHandler::<f64>::new(nx);
+    let mut handler_ax1 = FftHandler::<f64>::new(ny);
+    let mut handler_ax2 = FftHandler::<f64>::new(nz);
 
-    for x in 0..x_dim {
-        for y in 0..y_dim {
-            let b = a.slice(s![x, y, ..]);
-            let mut buf = b.as_slice().unwrap().to_vec();
-            fft.process(&mut buf);
-            let buf: Array1<Complex<f64>> = buf.into();
-            res.slice_mut(s![x, y, ..]).assign(&buf);
-        }
-    }
+    let mut work2: Array3<Complex<f64>> = Array3::zeros((nx, ny, nz));
+    let mut work1: Array3<Complex<f64>> = Array3::zeros((nx, ny, nz));
 
-    for x in 0..x_dim {
-        for z in 0..z_dim {
-            let b = res.slice(s![x, .., z]);
-            let mut buf = b.to_vec();
-            fft.process(&mut buf);
-            let buf: Array1<Complex<f64>> = buf.into();
-            res.slice_mut(s![x, .., z]).assign(&buf);
-        }
-    }
+    ndifft(&a, &mut work1, &mut handler_ax0, 0);
+    ndifft(&work1, &mut work2, &mut handler_ax1, 1);
+    ndifft(&work2, &mut vhat, &mut handler_ax2, 2);
 
-    for y in 0..y_dim {
-        for z in 0..z_dim {
-            let b = res.slice(s![.., y, z]);
-            let mut buf = b.to_vec();
-            fft.process(&mut buf);
-            let buf: Array1<Complex<f64>> = buf.into();
-            res.slice_mut(s![.., y, z]).assign(&buf);
-        }
-    }
-    res
+    vhat
 }
 
 pub fn sample_freq(n: &usize) -> Vec<f64> {
@@ -103,7 +52,7 @@ pub fn sample_freq(n: &usize) -> Vec<f64> {
         _ => (n - 1) / 2 + 1,
     };
     let mut res: Vec<f64> = (0..len)
-        .chain(0..(len - n % 2))
+        .chain(0..(len - n.rem_euclid(2)))
         .map(|x| x as f64)
         .collect::<Vec<f64>>();
 
@@ -130,13 +79,17 @@ pub fn ksq_inv() -> Array3<f64> {
 mod tests {
     use std::f64::consts::PI;
 
+    use ndarray::{Array, Array3, Zip};
+    use ndrustfft::Complex;
+    use rustfft::num_complex::ComplexFloat;
+
     use crate::{
         config::{BOX_SIZE, N_PARTICLES},
-        fourier::ksq_inv,
+        fourier::{inverse, ksq_inv},
         meshgrid::Meshgrid3,
     };
 
-    use super::sample_freq;
+    use super::{forward, sample_freq};
 
     #[test]
     fn fftfreq() {
@@ -169,21 +122,22 @@ mod tests {
                 .for_each(|(a, b)| assert_eq!(*a, b));
         }
     }
+    #[test]
+    fn check_fftn() {
+        let (nx, ny, nz) = (3, 3, 3);
 
-    #[test]
-    fn test() {
-        let m = Meshgrid3::new(
-            &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
-            &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
-            &(0..5).map(|x| x as f64).collect::<Vec<f64>>(),
-        );
-        println!("{:?}", m.grid);
-    }
-    #[test]
-    fn check_3() {
-        let s = sample_freq(&3);
-        let scale = 2. * PI * (N_PARTICLES as f64 / BOX_SIZE as f64);
-        println!("{:?}", s.iter().map(|x| x * scale).collect::<Vec<f64>>());
+        let v = (0..(nx * ny * nz))
+            .map(|x| Complex::new(x as f64, 0.))
+            .collect::<Vec<Complex<f64>>>();
+
+        let x: Array3<Complex<f64>> = Array3::from_shape_vec((nx, ny, nz), v).unwrap();
+        let y: Array3<Complex<f64>> = inverse(&forward(&x));
+
+        Zip::from(&x).and(&y).for_each(|&x, &y| {
+            if (x.re - y.re).abs() > 1e-4 || (x.im - y.im) > 1e-4 {
+                panic!("Large difference in values, got {} expected {}", x, y);
+            }
+        })
     }
     #[test]
     fn get_fourier_grid() {

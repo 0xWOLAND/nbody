@@ -43,7 +43,6 @@ mod tests {
                 .iter()
                 .map(|x| *x as u32)
                 .collect::<Vec<u32>>();
-            println!("{:?}", positions.shape());
             hist(a, Some(format!("{}_distribution", c)));
         })
     }

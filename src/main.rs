@@ -1,7 +1,11 @@
 use config::*;
 use nbody::{
-    density::density, fourier::ksq_inv, ic::initial_conditions, integrate::update,
-    random_field::gaussian_random_field, utils::array_2_to_image,
+    density::density,
+    fourier::ksq_inv,
+    ic::initial_conditions,
+    integrate::update,
+    random_field::gaussian_random_field,
+    utils::{array_2_to_image, array_3_to_image, hist},
 };
 use ndarray::{s, Array2, Array3};
 
@@ -26,14 +30,32 @@ fn main() {
     let mut idx = 0;
     while t_current < A_END - dt {
         let rho: Array3<f64> = density(&positions, average_density);
+        let _rho = rho.clone();
         (positions, velocities) = update(rho, positions, velocities, &ksq_inverse, t_current, dt);
         t_current += dt;
         idx += 1;
 
         if t_current >= A_INIT + n_plots * dt_plot {
             println!("saving {}", idx);
-            let img = array_2_to_image(positions.clone(), N_CELLS);
-            let _ = img.save(format!("./img/positions_small/p{}.png", idx));
+            println!("{:?}", _rho);
+            // save density
+            let img = array_3_to_image(_rho.map(|x| (*x * 5.) as u8), Some(N_CELLS));
+            let _ = img.save(format!("./img/positions_small/d{}.png", idx));
+
+            // save position
+            // let img = array_2_to_image(positions.clone(), N_CELLS);
+            // let _ = img.save(format!("./img/positions_small/p{}.png", idx));
+
+            // position histograms
+            // ['x', 'y', 'z'].iter().enumerate().for_each(|(dir, c)| {
+            //     let a = velocities
+            //         .slice(s![dir, ..])
+            //         .to_vec()
+            //         .iter()
+            //         .map(|x| (*x * 100.) as u32)
+            //         .collect::<Vec<u32>>();
+            //     hist(a, Some(format!("positions_small/v_{}_{}", idx, c)));
+            // });
             n_plots += 1.;
         }
     }
